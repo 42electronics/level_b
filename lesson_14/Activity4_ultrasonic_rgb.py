@@ -1,0 +1,80 @@
+#Copyright (c) 2023 42 Development dba 42 Electronics
+#Author: Eric Feickert
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy of
+#this software and associated documentation files (the "Software"), to deal in the
+#Software without restriction, including without limitation the rights to use,
+#copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+#Software, and to permit persons to whom the Software is furnished to do so,
+#subject to the following conditions:
+
+#The above copyright notice and this permission notice shall be included in all
+#copies or substantial portions of the Software.
+
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+#INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+#PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+#HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+#OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+#SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+import time
+import RPi.GPIO as GPIO
+import numpy
+
+rgb = [13,19,26]
+red = 13
+green = 19
+blue = 26
+trigger = 20
+echo = 21
+ranges = []
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(trigger,GPIO.OUT)
+GPIO.setup(echo,GPIO.IN)
+GPIO.setup(rgb,GPIO.OUT)
+
+def range_check():
+    GPIO.output(trigger, True)
+    time.sleep(0.00001)
+    GPIO.output(trigger, False)
+
+    while GPIO.input(echo) == False:
+        start_timer = time.time()
+
+    while GPIO.input(echo) == True:
+        stop_timer = time.time()
+
+    elapsed_time = stop_timer-start_timer
+    distance = (elapsed_time * 34300)/2
+    return distance
+
+def average():
+    for i in range(0,3):
+        ranges.append(range_check())
+        time.sleep(0.06)
+        distance = numpy.mean(ranges)
+    ranges.clear()
+    return distance
+
+try:
+    while True:
+        distance = average()
+        print('%.1f' % distance)
+        if distance < 20:
+            GPIO.output(red, GPIO.HIGH)
+            GPIO.output(green, GPIO.LOW)
+            GPIO.output(blue, GPIO.LOW)
+        elif 20 <= distance < 25:
+            GPIO.output(red, GPIO.LOW)
+            GPIO.output(green, GPIO.HIGH)
+            GPIO.output(blue, GPIO.LOW) 
+        else:
+            GPIO.output(red, GPIO.LOW)
+            GPIO.output(green, GPIO.LOW)
+            GPIO.output(blue, GPIO.HIGH) 
+        time.sleep(.25)
+
+except KeyboardInterrupt:
+    GPIO.cleanup()
