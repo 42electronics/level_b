@@ -36,6 +36,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(slide, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(rgb, GPIO.OUT)
 GPIO.setup(cap, GPIO.IN)
+GPIO.output(rgb, GPIO.LOW)
 
 disp = Adafruit_SSD1306.SSD1306_128_64(rst=None)
 disp.begin()
